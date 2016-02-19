@@ -109,6 +109,17 @@ def main_menu():
 	else:
 		return '0'
 
+def search_menu():
+	option = '0'
+	print("\t1 - Find 'Start Here' Note")
+	print("\t2 - Search Note by title")
+	print("\t3 - Back to main menu")
+	option = raw_input("\nSelect option: ")
+	if option == '1' or option == '2':
+		return option
+	else:
+		return '0'
+
 # Kill Tomboy Processes
 print "Terminating existent tomboy processes... "
 tomboy_pid = isRunning()
@@ -158,8 +169,25 @@ while option != '':
 
 	elif option == '2':
 		print 'Not implemented'
+		search_option = search_menu()
+		'''while search_option != '0':
+			if search_option == '1':
+				# Search start here note
+				sh = tomboy.FindStartHereNote()
+				if not sh: print "'Start Here' Note not found!"
+				#else: Show menu to see whole note or to see in parts
+			elif search_option == '2':
+				search_title = raw_input("Enter the Title to search: ")
+				n = tomboy.FindNote(serach_title)
+				if not n: 
+					print "Note not found!"
+					tryagain = raw_input("Do you want to make another search?[y/N]: ")
+					if tryagain != 'y' or tryagain != 'Y':
+						search_option = '0'
+			elif search_option == '3':
+				search_option = '0'
 		option = main_menu()
-
+'''
 	elif option == '3':
 		# Get notebooks
 		notebook_uris = []
@@ -172,7 +200,7 @@ while option != '':
 		option = main_menu()
 
 	elif option == '4':
-		option = ''
+		option = '' # Break the loop for close tomboy instance and exit
 
 	else:
 		print "Incorrect option. Try again!"
