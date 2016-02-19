@@ -18,8 +18,6 @@ import time
 import os
 from datetime import datetime
 
-tomboy_path = "/home/gnrg/.local/share/tomboy/"
-
 # This class model a complete XML Tomboy note. Used to create new notes. 
 class XmlNote():
 	def __init__(self):
