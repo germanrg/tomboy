@@ -15,6 +15,7 @@
 import dbus, gobject, dbus.glib
 import psutil  # sudo apt-get install python-dev; sudo easy_install psutil
 import time
+import os
 from datetime import datetime
 
 tomboy_path = "/home/gnrg/.local/share/tomboy/"
@@ -83,6 +84,16 @@ class XmlNote():
 		file.close()
 		self.xml_base = ''
 
+def print_header():
+	os.system("clear")
+	print "+---------------------------------------------+"
+	print "|                                             |"
+	print "|                  Tomboy.py                  |"
+	print "|                   by gNrg                   |"
+	print "|                                             |"
+	print "+---------------------------------------------+"
+	print ""
+
 # Check if Tomboy is running
 def isRunning():
 	for i in psutil.process_iter():
@@ -115,39 +126,46 @@ def search_menu():
 	print("\t2 - Search Note by title")
 	print("\t3 - Back to main menu")
 	option = raw_input("\nSelect option: ")
-	if option == '1' or option == '2':
+	if option == '1' or option == '2' or option == '3':
 		return option
 	else:
 		return '0'
 
 # Kill Tomboy Processes
-print "Terminating existent tomboy processes... "
+print_header()
+print "Terminating existent tomboy processes..."
 tomboy_pid = isRunning()
+tomboy_flag = False
 if tomboy_pid != 0:
 	for i in psutil.process_iter():
 		if i.name() == "tomboy":
 			p = i.pid
 			i.terminate()
-			print "[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p)
-	time.sleep(2)
-
+			print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p)
+			tomboy_flag = True
+if not tomboy_flag: print "\n\t[[ OK ]] - There isn't tomboy processes running."
+time.sleep(2)
 # Access the Tomboy remote control interface
-print "Starting new Tomboy instance... "
+print "\nStarting new Tomboy instance... "
 try:
 	bus = dbus.SessionBus()
 	obj = bus.get_object("org.gnome.Tomboy","/org/gnome/Tomboy/RemoteControl")
 	tomboy = dbus.Interface(obj, "org.gnome.Tomboy.RemoteControl")
-	print "[[ OK ]] - Tomboy started."
+	print "\n\t[[ OK ]] - Tomboy started."
 	# Give a little to run it.
 	time.sleep(2)
 except:
-	print "[[ ERROR ]] - Can't get Tomboy object from DBUS."
+	print "\n\t[[ ERROR ]] - Can't get Tomboy object from DBUS."
 	exit(1)
 
 # Process menu option
+os.system("clear")
+print_header()
 option = main_menu()
 while option != '':
 	if option == '1':
+		os.system("clear")
+		print_header()
 		print "Creating new note... "
 		new_note = XmlNote()
 		time.sleep(2)
@@ -168,53 +186,66 @@ while option != '':
 		option = main_menu()
 
 	elif option == '2':
-		print 'Not implemented'
-		search_option = search_menu()
-		'''while search_option != '0':
+		os.system("clear")
+		print_header()
+		search_option = '0'
+		while search_option != '':
+			search_option = search_menu()
 			if search_option == '1':
+				os.system("clear")
+				print_header()
 				# Search start here note
 				sh = tomboy.FindStartHereNote()
-				if not sh: print "'Start Here' Note not found!"
-				#else: Show menu to see whole note or to see in parts
+				if not sh: print "'Start Here' Note not found!\n"
+				else: print "Start Here note: " + str(sh) + '\n'
 			elif search_option == '2':
-				search_title = raw_input("Enter the Title to search: ")
-				n = tomboy.FindNote(serach_title)
+				os.system("clear")
+				print_header()
+				search_title = raw_input("\nEnter the Title to search: ")
+				n = tomboy.FindNote(search_title)
 				if not n: 
-					print "Note not found!"
-					tryagain = raw_input("Do you want to make another search?[y/N]: ")
-					if tryagain != 'y' or tryagain != 'Y':
-						search_option = '0'
+					print "\nNote not found!\n"
+				else: print "\nSearch note: " + str(n) + '\n'
 			elif search_option == '3':
-				search_option = '0'
+				search_option = ''
+
+		os.system("clear")
+		print_header()
 		option = main_menu()
-'''
+
 	elif option == '3':
+		os.system("clear")
+		print_header()
 		# Get notebooks
 		notebook_uris = []
 		notebook_names = []
 		get_notebooks(tomboy, notebook_names, notebook_uris)
-		print("NoteBooks: ")
+		out = "NoteBooks: "
 		for x in notebook_names:
-			print "\t - " + x
-		print "\n\n\n"
+			out += x + ', '
+		print out[:-2] + "\n"
 		option = main_menu()
 
 	elif option == '4':
 		option = '' # Break the loop for close tomboy instance and exit
 
 	else:
-		print "Incorrect option. Try again!"
+		os.system("clear")
+		print_header()
+		print "\n\t[[ ERROR ]] - Incorrect option. Try again!"
 		option = main_menu()
 
 # Close tomboy running instances
+print "Terminating tomboy process... "
 tomboy_pid = isRunning()
 if tomboy_pid == 0:
-	print "Tomboy is not running."
+	print "\n\t[[ OK ]] - There isn't tomboy processes running."
 else:
-	print "Terminating tomboy process... "
 	for i in psutil.process_iter():
 		if i.name() == "tomboy":
+			p = i.pid
 			i.terminate()
+			print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p) + '\n'
 	time.sleep(2)
 
 ### http://arstechnica.com/information-technology/2007/09/using-the-tomboy-d-bus-interface/
