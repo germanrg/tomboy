@@ -94,6 +94,41 @@ def print_header():
 	print "+---------------------------------------------+"
 	print ""
 
+def display_note(tomboy, note):
+	print "\n\tTitle:\t" + str(tomboy.GetNoteTitle(note))
+	print "\tCreate date:\t" + str(tomboy.GetNoteCreateDate(note)) # Improve format!
+	print "\tChange date:\t" + str(tomboy.GetNoteChangeDate(note)) # Improve format!
+	print "\tContents:\t" 
+	print tomboy.GetNoteContents(note)
+	tags = tomboy.GetTagsForNote(note)
+	if tags:
+		print "\tTags:\t\t"
+		for t in tags:
+			print '\t\t - ' + str(t)
+	else:
+		print "\tTags:\t\tNone"
+	print ""
+
+def process_note(tomboy, note):
+	note_option = ''
+	while note_option == '':
+		print "Note options:\n"
+		print "1 - Display note on tomboy"
+		print "2 - Display note below"
+		note_option = raw_input("\nSelect option: ")
+		if note_option == '1': 
+			tomboy.DisplayNote(note)
+			time.sleep(3)
+			raw_input("\nPress any key to continue... ")
+			note_option = ''
+		elif note_option == '2':
+			display_note(tomboy, note)
+			raw_input("\nPress any key to continue... ")
+			note_option = ''
+		else:
+			print "Invalid option. Try again.\n\n\n"
+			note_option = ''
+
 # Check if Tomboy is running
 def isRunning():
 	for i in psutil.process_iter():
@@ -189,7 +224,7 @@ while option != '':
 		os.system("clear")
 		print_header()
 		search_option = '0'
-		while search_option != '':
+		while search_option != '-1':
 			search_option = search_menu()
 			if search_option == '1':
 				os.system("clear")
@@ -197,17 +232,23 @@ while option != '':
 				# Search start here note
 				sh = tomboy.FindStartHereNote()
 				if not sh: print "'Start Here' Note not found!\n"
-				else: print "Start Here note: " + str(sh) + '\n'
+				else: 
+					print "\nStart Here note: " + str(sh) + '\n'
+					process_note(tomboy, sh)
+					search_option = '-1'
 			elif search_option == '2':
 				os.system("clear")
 				print_header()
 				search_title = raw_input("\nEnter the Title to search: ")
 				n = tomboy.FindNote(search_title)
-				if not n: 
-					print "\nNote not found!\n"
-				else: print "\nSearch note: " + str(n) + '\n'
+				if not n: print "\nNote not found!\n"
+				else: 
+					print "\nSearch note: " + str(n) + '\n'
+					process_note(tomboy, n)
+					search_option = '-1'
 			elif search_option == '3':
-				search_option = ''
+				search_option = '-1'
+			else: print "\nIncorrect option. Try again.\n"
 
 		os.system("clear")
 		print_header()
