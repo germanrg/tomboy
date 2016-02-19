@@ -20,11 +20,12 @@ from datetime import datetime
 
 tomboy_path = "/home/gnrg/.local/share/tomboy/"
 
+# This class model a complete XML Tomboy note. Used to create new notes. 
 class XmlNote():
 	def __init__(self):
 		self.xml_base = ''
 		self.xml_headers = '<?xml version="1.0" encoding="utf-8"?>' + '\n'
-		self.xml_headers += '<note version="0.3" xmlns:link="" xmlns:size="" xmlns="">' + '\n'
+		self.xml_headers += '<note version="0.3" xmlns:link="http://beatniksoftware.com/tomboy/link" xmlns:size="http://beatniksoftware.com/tomboy/size" xmlns="http://beatniksoftware.com/tomboy">' + '\n'
 		self.xml_title = '<title></title>' + '\n'
 		self.xml_content = '<text xml:space="preserve"><note-content version="0.1"></note-content></text>' + '\n'
 		self.xml_last_change_date = '<last-change-date></last-change-date>' + '\n'
@@ -78,12 +79,11 @@ class XmlNote():
 		formatted_date += '+1:00'
 		self.set_date(formatted_date)
 		self.__mount_xml__()
-		
-		file = open(tomboy_path + self.xml_title[7:-9] + formatted_date + '.note','w+')
-		file.write(self.xml_base)
-		file.close()
+		new_note = tomboy.CreateNote()
+		tomboy.SetNoteCompleteXml(new_note, self.xml_base)
 		self.xml_base = ''
 
+# This function prints the script banner
 def print_header():
 	os.system("clear")
 	print "+---------------------------------------------+"
@@ -93,7 +93,7 @@ def print_header():
 	print "|                                             |"
 	print "+---------------------------------------------+"
 	print ""
-
+# This function prints a given Tomboy note details on stdout
 def display_note(tomboy, note):
 	print "\n\tTitle:\t" + str(tomboy.GetNoteTitle(note))
 	print "\tCreate date:\t" + str(tomboy.GetNoteCreateDate(note)) # Improve format!
@@ -108,45 +108,24 @@ def display_note(tomboy, note):
 	else:
 		print "\tTags:\t\tNone"
 	print ""
-
-def process_note(tomboy, note):
-	note_option = ''
-	while note_option == '':
-		print "Note options:\n"
-		print "1 - Display note on tomboy"
-		print "2 - Display note below"
-		note_option = raw_input("\nSelect option: ")
-		if note_option == '1': 
-			tomboy.DisplayNote(note)
-			time.sleep(3)
-			raw_input("\nPress any key to continue... ")
-			note_option = ''
-		elif note_option == '2':
-			display_note(tomboy, note)
-			raw_input("\nPress any key to continue... ")
-			note_option = ''
-		else:
-			print "Invalid option. Try again.\n\n\n"
-			note_option = ''
-
-# Check if Tomboy is running
+# This function checks if Tomboy is running
 def isRunning():
 	for i in psutil.process_iter():
 		if i.name() == "tomboy":
 			return i.pid
 	return 0
-
+# This function gets all Tomboy notebooks 
 def get_notebooks(tomboy, notebook_names, notebook_uris):
 	for x in tomboy.ListAllNotes():
 		title = tomboy.GetNoteTitle(x)
 		if title[:34] == "Plantilla del cuaderno de notas de":
 			notebook_names.append(title[35:])
 			notebook_uris.append(x)
-
+#This function shows the main menu
 def main_menu():
 	option = '0'
 	print("\t1 - New Note")
-	print("\t2 - Search Note/s")
+	print("\t2 - Search Note")
 	print("\t3 - Get Notebooks")
 	print("\t4 - Exit")
 	option = raw_input("\nSelect option: ")
@@ -154,7 +133,7 @@ def main_menu():
 		return option
 	else:
 		return '0'
-
+#This function shows the search menu
 def search_menu():
 	option = '0'
 	print("\t1 - Find 'Start Here' Note")
@@ -165,21 +144,42 @@ def search_menu():
 		return option
 	else:
 		return '0'
+# This function shows note options menu
+def note_options(tomboy, note):
+	note_option = ''
+	while note_option == '':
+		print "Note options:\n"
+		print "1 - Edit note in tomboy"
+		print "2 - Display note below"
+		note_option = raw_input("\nSelect option: ")
+		if note_option == '1': 
+			tomboy.DisplayNote(note)
+			time.sleep(3)
+			raw_input("\nPress any key to continue... ")
+		elif note_option == '2':
+			display_note(tomboy, note)
+			raw_input("\nPress any key to continue... ")
+		else:
+			print "Invalid option. Try again.\n\n\n"
+			note_option = ''
+# This function search and kill Tomboy processes.
+def close_tomboy(tomboy_pid):
+	print "Terminating Tomboy processes..."
+	tomboy_flag = False
+	if tomboy_pid:
+		for i in psutil.process_iter():
+			if i.name() == "tomboy":
+				p = i.pid
+				i.terminate()
+				print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p)
+				tomboy_flag = True
+	if not tomboy_flag: print "\n\t[[ OK ]] - There isn't tomboy processes running."
+	time.sleep(2)
 
-# Kill Tomboy Processes
 print_header()
-print "Terminating existent tomboy processes..."
-tomboy_pid = isRunning()
-tomboy_flag = False
-if tomboy_pid != 0:
-	for i in psutil.process_iter():
-		if i.name() == "tomboy":
-			p = i.pid
-			i.terminate()
-			print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p)
-			tomboy_flag = True
-if not tomboy_flag: print "\n\t[[ OK ]] - There isn't tomboy processes running."
-time.sleep(2)
+# Kill Tomboy Processes
+close_tomboy(isRunning())
+
 # Access the Tomboy remote control interface
 print "\nStarting new Tomboy instance... "
 try:
@@ -194,22 +194,21 @@ except:
 	exit(1)
 
 # Process menu option
-os.system("clear")
 print_header()
 option = main_menu()
 while option != '':
+	# Create new note
 	if option == '1':
-		os.system("clear")
 		print_header()
-		print "Creating new note... "
+		print "Note details: \n"
 		new_note = XmlNote()
 		time.sleep(2)
-		title = raw_input("Title: ")
-		content = raw_input("Content [XML/HTML is allowed]: ")
-		startup = raw_input("Show note on startup?[y/N]: ")
+		title = raw_input("\tTitle: ")
+		content = raw_input("\tContent [Press enter to finish]: ")
+		startup = raw_input("\tShow note on startup?[y/N]: ")
 		if startup == 'Y' or startup == 'y': startup = True
 		else: startup = False
-		notebook = raw_input("Notebook[Not required]: ")
+		notebook = raw_input("\tNotebook[Not required]: ")
 
 		if len(notebook) > 1: new_note.set_notebook(notebook)
 		new_note.set_title(title) 
@@ -217,47 +216,40 @@ while option != '':
 		new_note.set_startup(startup)
 		new_note.create_note(tomboy)
 		time.sleep(2)
-		print 'Note created succesfully!\n'
+		print '\n\t[[ OK ]] - Note created succesfully!\n'
 		option = main_menu()
-
+	# Search notes
 	elif option == '2':
-		os.system("clear")
 		print_header()
 		search_option = '0'
 		while search_option != '-1':
 			search_option = search_menu()
+			# Search 'Start Here' Note
 			if search_option == '1':
-				os.system("clear")
 				print_header()
-				# Search start here note
 				sh = tomboy.FindStartHereNote()
 				if not sh: print "'Start Here' Note not found!\n"
 				else: 
 					print "\nStart Here note: " + str(sh) + '\n'
-					process_note(tomboy, sh)
+					note_options(tomboy, sh)
 					search_option = '-1'
+			# Search note by title
 			elif search_option == '2':
-				os.system("clear")
 				print_header()
 				search_title = raw_input("\nEnter the Title to search: ")
 				n = tomboy.FindNote(search_title)
 				if not n: print "\nNote not found!\n"
 				else: 
 					print "\nSearch note: " + str(n) + '\n'
-					process_note(tomboy, n)
+					note_options(tomboy, n)
 					search_option = '-1'
-			elif search_option == '3':
-				search_option = '-1'
+			elif search_option == '3': search_option = '-1'
 			else: print "\nIncorrect option. Try again.\n"
-
-		os.system("clear")
 		print_header()
 		option = main_menu()
-
+	# Get notebook names
 	elif option == '3':
-		os.system("clear")
 		print_header()
-		# Get notebooks
 		notebook_uris = []
 		notebook_names = []
 		get_notebooks(tomboy, notebook_names, notebook_uris)
@@ -266,29 +258,14 @@ while option != '':
 			out += x + ', '
 		print out[:-2] + "\n"
 		option = main_menu()
-
+	# Break the loop for close tomboy instance and exit
 	elif option == '4':
-		option = '' # Break the loop for close tomboy instance and exit
-
+		option = '' 
+	# Incorrect option
 	else:
-		os.system("clear")
 		print_header()
 		print "\n\t[[ ERROR ]] - Incorrect option. Try again!"
 		option = main_menu()
 
-# Close tomboy running instances
-print "Terminating tomboy process... "
-tomboy_pid = isRunning()
-if tomboy_pid == 0:
-	print "\n\t[[ OK ]] - There isn't tomboy processes running."
-else:
-	for i in psutil.process_iter():
-		if i.name() == "tomboy":
-			p = i.pid
-			i.terminate()
-			print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p) + '\n'
-	time.sleep(2)
-
-### http://arstechnica.com/information-technology/2007/09/using-the-tomboy-d-bus-interface/
-### https://github.com/ducdebreme/tomboy-scripts
-### http://workhorsy.org/junk/tomboy_notify_py.txt
+# Kill Tomboy processes
+close_tomboy(isRunning())
