@@ -35,6 +35,19 @@ to display or edit them and get all tomboy notebooks.
 For more information about script usage and options
 use -h. """
 
+def get_start_here(tomboy):
+	return tomboy.FindStartHereNote()
+def get_note_by_title(tomboy, title):
+	return tomboy.FindNote(title)
+def get_note_by_notebook(tomboy, notebook):
+	pass
+def invalid():
+   print "INVALID CHOICE!"
+search_menu = {"1":("Get 'Start Here' note", get_start_here), 
+				"2":("Get note by title", get_note_by_title),
+				"3":("Get note by notebook", get_note_by_notebook)
+       		}
+
 # This class model a complete XML Tomboy note. Used to create new notes. 
 class XmlNote():
 	def __init__(self):
@@ -97,7 +110,6 @@ class XmlNote():
 		new_note = tomboy.CreateNote()
 		tomboy.SetNoteCompleteXml(new_note, self.xml_base)
 		self.xml_base = ''
-
 # This function prints the script banner
 def print_header():
 	os.system("clear")
@@ -289,21 +301,26 @@ if opts.notebooks_flag:
 close_tomboy(isRunning())
 
 '''
-def my_add_fn():
-   print "SUM:%s"%sum(map(int,raw_input("Enter 2 numbers seperated by a space").split()))
+def get_start_here(tomboy):
+	return tomboy.FindStartHereNote()
 
-def my_quit_fn():
-   raise SystemExit
+def get_note_by_title(tomboy, title):
+	return tomboy.FindNote(title)
+
+def get_note_by_notebook(tomboy, notebook):
+	pass
 
 def invalid():
    print "INVALID CHOICE!"
 
-menu = {"1":("Sum",my_add_fn),
-        "2":("Quit",my_quit_fn)
+notes_menu = {"1":("Display note in tomboy", note_display_tomboy),
+        "2":("Display note below", note_display_text),
+        "3":("Edit note", note_edit),
+        "4":("Delete note", note_delete)
        }
-for key in sorted(menu.keys()):
-     print key+":" + menu[key][0]
+for key in sorted(searc_menu.keys()):
+     print key+":" + search_menu[key][0]
 
 ans = raw_input("Make A Choice")
-menu.get(ans,[None,invalid])[1]()
+search_menu.get(ans,[None,invalid])[1]()
 '''
