@@ -16,7 +16,24 @@ import dbus, gobject, dbus.glib
 import psutil  # sudo apt-get install python-dev; sudo easy_install psutil
 import time
 import os
+import optparse
 from datetime import datetime
+
+header = """
+	+-------------------------------------------------+
+	|                                                 |
+	|                    Tomboy.py                    |
+	|                     by gNrg                     |
+	|                                                 |
+	+-------------------------------------------------+\n
+"""
+version = "%prog V0.1"
+usage = "usage: %prog [-h] [-nst]"
+desc = """Simply script to manage tomboy from terminal. You can 
+create new tomboy notes, search notes by title or tag
+to display or edit them and get all tomboy notebooks.
+For more information about script usage and options
+use -h. """
 
 # This class model a complete XML Tomboy note. Used to create new notes. 
 class XmlNote():
@@ -84,13 +101,7 @@ class XmlNote():
 # This function prints the script banner
 def print_header():
 	os.system("clear")
-	print "+---------------------------------------------+"
-	print "|                                             |"
-	print "|                  Tomboy.py                  |"
-	print "|                   by gNrg                   |"
-	print "|                                             |"
-	print "+---------------------------------------------+"
-	print ""
+	print header
 # This function prints a given Tomboy note details on stdout
 def display_note(tomboy, note):
 	print "\n\tTitle:\t" + str(tomboy.GetNoteTitle(note))
@@ -175,6 +186,24 @@ def close_tomboy(tomboy_pid):
 	if not tomboy_flag: print "\n\t[[ OK ]] - There isn't tomboy processes running."
 	time.sleep(2)
 
+parser = optparse.OptionParser(description = desc, version = version, usage = usage)
+
+parser.add_option("-n", "--new-note", action="store_true",
+                    dest="new_flag", default=False,
+                    help="Create a new tomboy note")
+parser.add_option("-s", "--search", action="store_true",
+                    dest="search_flag", default=False,
+                    help="Show accepted passwords")
+parser.add_option("-t", "--notebooks", action="store_true",
+                    dest="notebooks_flag", default=False,
+                    help="Show all tomboy notebook names")
+(opts, args) = parser.parse_args()
+
+if not opts.new_flag and not opts.search_flag and not opts.notebooks_flag:
+	parser.error("Select at least one of this options: [-nst].\n")
+	parser.print_help()
+	exit(-1)
+
 print_header()
 # Kill Tomboy Processes
 close_tomboy(isRunning())
@@ -192,85 +221,69 @@ except:
 	print "\n\t[[ ERROR ]] - Can't get Tomboy object from DBUS."
 	exit(1)
 
-# Process menu option
-print_header()
-option = main_menu()
-while option != '':
-	# Create new note
-	if option == '1':
-		print_header()
-		print "Note details: \n"
-		new_note = XmlNote()
-		time.sleep(2)
-		title = raw_input("\tTitle: ")
-		content = raw_input("\tContent [Press enter to finish]: ")
-		startup = raw_input("\tShow note on startup?[y/N]: ")
-		if startup == 'Y' or startup == 'y': startup = True
-		else: startup = False
-		notebook = raw_input("\tNotebook[Not required]: ")
+# Creating new note
+if opts.new_flag:
+	print_header()
+	print "Note details: \n"
+	new_note = XmlNote()
+	time.sleep(2)
+	title = raw_input("\tTitle: ")
+	content = raw_input("\tContent [Press enter to finish]: ")
+	startup = raw_input("\tShow note on startup?[y/N]: ")
+	if startup == 'Y' or startup == 'y': startup = True
+	else: startup = False
+	notebook = raw_input("\tNotebook[Not required]: ")
 
-		if len(notebook) > 1: new_note.set_notebook(notebook)
-		new_note.set_title(title) 
-		new_note.set_content(content)
-		new_note.set_startup(startup)
-		new_note.create_note(tomboy)
-		time.sleep(2)
-		print '\n\t[[ OK ]] - Note created succesfully!\n'
-		option = main_menu()
-	# Search notes
-	elif option == '2':
-		print_header()
-		search_option = '0'
-		while search_option != '-1':
-			search_option = search_menu()
-			# Search 'Start Here' Note
-			if search_option == '1':
-				print_header()
-				sh = tomboy.FindStartHereNote()
-				if not sh: print "'Start Here' Note not found!\n"
-				else: 
-					print "\nStart Here note: " + str(sh) + '\n'
-					note_options(tomboy, sh)
-					search_option = '-1'
-			# Search note by title
-			elif search_option == '2':
-				print_header()
-				search_title = raw_input("\nEnter the Title to search: ")
-				n = tomboy.FindNote(search_title)
-				if not n: print "\nNote not found!\n"
-				else: 
-					print "\nSearch note: " + str(n) + '\n'
-					note_options(tomboy, n)
-					search_option = '-1'
-			elif search_option == '3': search_option = '-1'
-			else: print "\nIncorrect option. Try again.\n"
-		print_header()
-		option = main_menu()
-	# Get notebook names
-	elif option == '3':
-		print_header()
-		notebook_uris = []
-		notebook_names = []
-		get_notebooks(tomboy, notebook_names, notebook_uris)
-		# Remove duplicates
-		aux = set(notebook_names)
-		notebook_names = list(aux)
-		aux = set(notebook_uris)
-		notebook_uris = list(aux)
+	if len(notebook) > 1: new_note.set_notebook(notebook)
+	new_note.set_title(title) 
+	new_note.set_content(content)
+	new_note.set_startup(startup)
+	new_note.create_note(tomboy)
+	time.sleep(2)
+	print '\n\t[[ OK ]] - Note created succesfully!\n'
 
-		out = "NoteBooks: "
-		for x in notebook_names:
-			out += x + ', '
-		print out[:-2] + "\n"
-		option = main_menu()
-	# Break the loop for close tomboy instance and exit
-	elif option == '4':
-		option = '' 
-	# Incorrect option
-	else:
-		print_header()
-		print "\n\t[[ ERROR ]] - Incorrect option. Try again!"
-		option = main_menu()
+if opts.search_flag:
+	print_header()
+	search_option = '0'
+	while search_option != '-1':
+		search_option = search_menu()
+		# Search 'Start Here' Note
+		if search_option == '1':
+			print_header()
+			sh = tomboy.FindStartHereNote()
+			if not sh: print "'Start Here' Note not found!\n"
+			else: 
+				print "\nStart Here note: " + str(sh) + '\n'
+				note_options(tomboy, sh)
+				search_option = '-1'
+		# Search note by title
+		elif search_option == '2':
+			print_header()
+			search_title = raw_input("\nEnter the Title to search: ")
+			n = tomboy.FindNote(search_title)
+			if not n: print "\nNote not found!\n"
+			else: 
+				print "\nSearch note: " + str(n) + '\n'
+				note_options(tomboy, n)
+				search_option = '-1'
+		elif search_option == '3': search_option = '-1'
+		else: print "\nIncorrect option. Try again.\n"
+
+if opts.notebooks_flag:
+	print_header()
+	notebook_uris = []
+	notebook_names = []
+	get_notebooks(tomboy, notebook_names, notebook_uris)
+	# Remove duplicates
+	aux = set(notebook_names)
+	notebook_names = list(aux)
+	aux = set(notebook_uris)
+	notebook_uris = list(aux)
+
+	out = "NoteBooks: "
+	for x in notebook_names:
+		out += x + ', '
+	print out[:-2] + "\n"
 
 # Kill Tomboy processes
 close_tomboy(isRunning())
