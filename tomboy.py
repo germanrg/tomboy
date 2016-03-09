@@ -115,10 +115,11 @@ def isRunning():
 # This function gets all Tomboy notebooks 
 def get_notebooks(tomboy, notebook_names, notebook_uris):
 	for x in tomboy.ListAllNotes():
-		title = tomboy.GetNoteTitle(x)
-		if title[:34] == "Plantilla del cuaderno de notas de":
-			notebook_names.append(title[35:])
-			notebook_uris.append(x)
+		tags = tomboy.GetTagsForNote(x)
+		for t in tags:
+			if t[:16] == 'system:notebook:':
+				notebook_names.append(t[16:])
+				notebook_uris.append(x)
 #This function shows the main menu
 def main_menu():
 	option = '0'
@@ -251,6 +252,12 @@ while option != '':
 		notebook_uris = []
 		notebook_names = []
 		get_notebooks(tomboy, notebook_names, notebook_uris)
+		# Remove duplicates
+		aux = set(notebook_names)
+		notebook_names = list(aux)
+		aux = set(notebook_uris)
+		notebook_uris = list(aux)
+
 		out = "NoteBooks: "
 		for x in notebook_names:
 			out += x + ', '
