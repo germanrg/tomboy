@@ -1,6 +1,16 @@
 tomboy.py
 
-A simple python script to get and set Tomboy notes from terminal.
+A simple python script to create, search and display Tomboy notes from terminal.
+
+Usage: tomboy.py [-h] [-nst]
+
+Options:
+  --version        show program's version number and exit
+  -h, --help       show this help message and exit
+  -n, --new-note   Create a new tomboy note
+  -s, --search     Show accepted passwords
+  -t, --notebooks  Show all tomboy notebook names
+
 
 The script uses an extra lib: psutil
 To install it try: easy_install psutil
