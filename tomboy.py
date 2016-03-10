@@ -198,7 +198,7 @@ parser.add_option("-n", "--new-note", action="store_true",
                     help="Create a new tomboy note")
 parser.add_option("-s", "--search", action="store_true",
                     dest="search_flag", default=False,
-                    help="Show accepted passwords")
+                    help="Search notes by title or notebook")
 parser.add_option("-t", "--notebooks", action="store_true",
                     dest="notebooks_flag", default=False,
                     help="Show all tomboy notebook names")
