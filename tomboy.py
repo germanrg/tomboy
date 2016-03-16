@@ -77,8 +77,22 @@ def get_note_by_notebook(tomboy):
     notebook = raw_input("\n\tNotebook: ")
     notebooks = []
     get_notebooks(tomboy, notebooks)
-    if notebook in notebooks: "\n\t[[ OK ]] Notebook exist: " + notebook + "\n"
-    else: print "\n\t[[ ERROR ]] Notebook not found\n"
+    exist = False
+    for nb in notebooks:
+        if nb == notebook: 
+            exist = True
+            notebook = nb
+            break
+    if exist: 
+        nb_notes = tomboy.GetAllNotesWithTag('system:notebook:'+notebook)
+        if not nb_notes: return []
+        else:
+            nbns = []
+            for n in nb_notes:
+                nbns.append(n)
+            return nbns
+    else: 
+        return []
 def save_text_note(tomboy, note):
     text = note_to_str(tomboy, note)
     path = raw_input("\tEnter file path: ")
@@ -276,7 +290,7 @@ if opts.search_flag:
     o = raw_input("\n\tSelect option: ")
     ans = search_menu.get(o,[None,invalid_option])[1](tomboy)
     if o == '1' or o == '2':
-        if not ans[0]: print "\n\t[[ ERROR ]] - Note not found!\n"
+        if not ans: print "\n\t[[ ERROR ]] - Note not found!\n"
         else:
             print_header()
             print "\n\t[[ OK ]] - Note: " + str(ans[0]) + '\n'
@@ -285,7 +299,11 @@ if opts.search_flag:
             o = raw_input("\n\tSelect option: ")
             note_o = notes_menu.get(o,[None,invalid_option])[1](tomboy, ans[0])
     elif o == '3':
-        if not ans[0]: print "\n\t[[ ERROR ]] - Notebook empty or not found!\n"
+        print_header()
+        if not ans: print "\n\t[[ ERROR ]] - Notebook empty or not found!\n"
+        else: 
+            print "\n\t[[ OK ]] - Notebook found!\n"
+            print ans
 
 if opts.notebooks_flag:
     print_header()
