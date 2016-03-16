@@ -45,6 +45,22 @@ def isRunning():
         if i.name() == "tomboy":
             return i.pid
     return 0
+def note_to_str(tomboy, note):
+    '''Return note in string format'''
+    string = "\nTitle:\t" + str(tomboy.GetNoteTitle(note)) + '\n'
+    string += "Create date:\t" + str(tomboy.GetNoteCreateDate(note)) + '\n' # Improve format!
+    string += "Change date:\t" + str(tomboy.GetNoteChangeDate(note)) + '\n' # Improve format!
+    string += "Contents:\t" + '\n'
+    string += tomboy.GetNoteContents(note) + '\n'
+    tags = tomboy.GetTagsForNote(note)
+    if tags:
+        string += "Tags:" + '\n'
+        for t in tags:
+            string += '\t - ' + str(t) + '\n'
+    else:
+        string += "Tags:\t\tNone" + '\n'
+    string += '\n'
+    return string
 def get_notebooks(tomboy, notebook_names):
     '''Get all Tomboy notebooks'''
     for x in tomboy.ListAllNotes():
@@ -64,26 +80,33 @@ def get_note_by_notebook(tomboy):
     if notebook in notebooks: "\n\t[[ OK ]] Notebook exist: " + notebook + "\n"
     else: print "\n\t[[ ERROR ]] Notebook not found\n"
 def save_text_note(tomboy, note):
-    print 'Save text note'
+    text = note_to_str(tomboy, note)
+    path = raw_input("\tEnter file path: ")
+    try:
+        new_file = open(path, 'w')
+        new_file.write(text)
+        new_file.close()
+        print "\n\t[[ OK ]] - The text file has been saved"
+        print "\n\t\tYou can see the file on: " + path + '\n'
+    except:
+        print "\n\t[[ ERROR ]] - The text file can't be saved" + '\n'
 def save_xml_note(tomboy, note):
-    print 'Save XML note'
+    xml = tomboy.GetNoteCompleteXml(note)
+    path = raw_input("\tEnter complete path: ")
+    try:
+        new_file = open(path, 'w')
+        new_file.write(xml)
+        new_file.close()
+        print "\n\t[[ OK ]] - The xml file has been saved"
+        print "\n\t\tYou can see the file on: " + path + '\n'
+    except:
+        print "\n\t[[ ERROR ]] - The xml file can't be saved" + '\n'
 def edit_note(tomboy, note):
     print 'Edit note'
 def display_note(tomboy, note):
     '''Prints a given Tomboy note details on stdout'''
-    print "\n\tTitle:\t" + str(tomboy.GetNoteTitle(note))
-    print "\tCreate date:\t" + str(tomboy.GetNoteCreateDate(note)) # Improve format!
-    print "\tChange date:\t" + str(tomboy.GetNoteChangeDate(note)) # Improve format!
-    print "\tContents:\t" 
-    print tomboy.GetNoteContents(note)
-    tags = tomboy.GetTagsForNote(note)
-    if tags:
-        print "\tTags:\t\t"
-        for t in tags:
-            print '\t\t - ' + str(t)
-    else:
-        print "\tTags:\t\tNone"
-    print ""
+    print note_to_str(tomboy, note)
+
 def invalid_option():
     print "\n\t[[ ERROR ]] Incorrect option\n"
 def close_tomboy(tomboy_pid):
@@ -95,9 +118,9 @@ def close_tomboy(tomboy_pid):
             if i.name() == "tomboy":
                 p = i.pid
                 i.terminate()
-                print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p)
+                print "\n\t[[ OK ]] - Tomboy process terminated succesfully. PID: " + str(p) + '\n'
                 tomboy_flag = True
-    if not tomboy_flag: print "\n\t[[ OK ]] - There isn't tomboy processes running."
+    if not tomboy_flag: print "\n\t[[ OK ]] - There isn't tomboy processes running." + '\n'
     time.sleep(2)
 
 search_menu = {"1":("Get 'Start Here' note", get_start_here), 
