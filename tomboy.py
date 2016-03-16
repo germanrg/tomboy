@@ -269,7 +269,8 @@ if opts.notebooks_flag:
     notebook_names = []
     get_notebooks(tomboy, notebook_names)
     notebook_names = set(list(notebook_names)) # Remove duplicates
-    out = "NoteBooks: "
+    if not len(notebook_names): out = "\tThere isn't notebooks.\n"
+    else: out = "NoteBooks: "
     for x in notebook_names:
         out += x + ', '
     print out[:-2] + "\n"
